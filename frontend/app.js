@@ -4,7 +4,7 @@
 // ============================================
 
 // ---- Configuration ----
-const API_URL = "http://10.156.41.248:8000";
+const API_URL = "https://agroguard-backend-snyq.onrender.com";
 
 // ---- State ----
 let currentLanguage = "en";
