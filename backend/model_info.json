@@ -1,0 +1,29 @@
+{
+  "model_name": "AgroGuard MobileNetV2",
+  "version": "1.0.0",
+  "created_date": "2026-05-18",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "num_classes": 4,
+  "class_names": [
+    "bacterial_leaf_blight",
+    "brown_spot",
+    "healthy",
+    "leaf_blast"
+  ],
+  "class_display_names": [
+    "Bacterial Leaf Blight",
+    "Brown Spot",
+    "Healthy",
+    "Leaf Blast"
+  ],
+  "test_accuracy": 93.62,
+  "val_accuracy": 88.89,
+  "model_file": "agroguard_final.keras",
+  "architecture": "MobileNetV2",
+  "training_epochs": 20,
+  "notes": "Trained on rice leaf disease dataset. 4-class classification for Mandya, Karnataka farmers."
+}

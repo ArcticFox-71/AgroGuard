@@ -1,0 +1,14 @@
+{
+  "phase_a_epochs": 10,
+  "phase_b_epochs": 10,
+  "final_train_acc": 1.0,
+  "final_val_acc": 0.8814814686775208,
+  "best_val_acc": 0.8888888955116272,
+  "class_names": [
+    "bacterial_leaf_blight",
+    "brown_spot",
+    "healthy",
+    "leaf_blast"
+  ],
+  "timestamp": "2026-05-16 23:46:53"
+}

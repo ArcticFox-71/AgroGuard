@@ -1,0 +1,8 @@
+fastapi==0.136.1
+uvicorn==0.34.0
+python-multipart==0.0.20
+aiofiles==25.1.0
+pillow==11.2.1
+numpy==2.2.5
+tf-nightly
+gdown

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width,
+                   initial-scale=1.0">
+    <title>AgroGuard — Rice Disease Detection</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+</head>
+<body>
+
+    <!-- ======= HEADER ======= -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+    <svg width="36" height="36" viewBox="0 0 100 100">
+        <ellipse cx="50" cy="45" rx="14" ry="32"
+                 fill="#4caf72"
+                 transform="rotate(-20, 50, 45)"/>
+        <ellipse cx="50" cy="45" rx="12" ry="28"
+                 fill="#2d8a4e"
+                 transform="rotate(10, 50, 45)"/>
+        <ellipse cx="34" cy="58" rx="10" ry="20"
+                 fill="#4caf72"
+                 transform="rotate(-35, 34, 58)"/>
+        <ellipse cx="66" cy="58" rx="10" ry="20"
+                 fill="#4caf72"
+                 transform="rotate(35, 66, 58)"/>
+        <line x1="50" y1="78" x2="50" y2="95"
+              stroke="#4caf72" stroke-width="3"
+              stroke-linecap="round"/>
+    </svg>
+    <span class="logo-text">AgroGuard</span>
+</div>
+            <button class="lang-toggle"
+                    id="langToggle"
+                    onclick="toggleLanguage()">
+                ಕನ್ನಡ
+            </button>
+        </div>
+    </header>
+
+    <!-- ======= HERO SECTION ======= -->
+    <section class="hero">
+        <h1 class="hero-title"
+            id="heroTitle">
+            Rice Leaf Disease Detection
+        </h1>
+        <p class="hero-subtitle"
+           id="heroSubtitle">
+            Take a photo of your paddy leaf and get
+            instant disease prediction with treatment
+            advice
+        </p>
+    </section>
+
+    <!-- ======= UPLOAD SECTION ======= -->
+    <section class="upload-section">
+        <div class="upload-card">
+
+            <!-- Image Preview -->
+            <div class="preview-container"
+                 id="previewContainer">
+                <div class="preview-placeholder"
+                     id="previewPlaceholder">
+                    <span class="placeholder-icon">
+                        📷
+                    </span>
+                    <p id="placeholderText">
+                        Upload or capture a leaf photo
+                    </p>
+                </div>
+                <img id="previewImage"
+                     class="preview-image hidden"
+                     alt="Leaf preview">
+            </div>
+
+            <!-- Upload Buttons -->
+            <div class="button-group">
+                <label class="btn btn-primary"
+                       for="fileInput">
+                    <span>📁</span>
+                    <span id="uploadBtnText">
+                        Upload Photo
+                    </span>
+                </label>
+                <input type="file"
+                       id="fileInput"
+                       accept="image/*"
+                       onchange="handleFileSelect(event)"
+                       style="display:none">
+
+                <label class="btn btn-secondary"
+                       for="cameraInput">
+                    <span>📷</span>
+                    <span id="cameraBtnText">
+                        Take Photo
+                    </span>
+                </label>
+                <input type="file"
+                       id="cameraInput"
+                       accept="image/*"
+                       capture="environment"
+                       onchange="handleFileSelect(event)"
+                       style="display:none">
+            </div>
+
+            <!-- Analyse Button -->
+            <button class="btn btn-analyse hidden"
+                    id="analyseBtn"
+                    onclick="analyseImage()">
+                <span id="analyseBtnText">
+                    🔍 Analyse Leaf
+                </span>
+            </button>
+
+        </div>
+    </section>
+
+    <!-- ======= LOADING ======= -->
+    <section class="loading-section hidden"
+             id="loadingSection">
+        <div class="loading-card">
+            <div class="spinner"></div>
+            <p id="loadingText">
+                Analysing your leaf...
+            </p>
+        </div>
+    </section>
+
+    <!-- ======= RESULTS SECTION ======= -->
+    <section class="results-section hidden"
+             id="resultsSection">
+
+        <!-- Disease Card -->
+        <div class="result-card disease-card">
+
+            <!-- Disease Header -->
+            <div class="disease-header"
+                 id="diseaseHeader">
+                <div class="disease-icon"
+                     id="diseaseIcon">🌿</div>
+                <div class="disease-title-group">
+                    <h2 class="disease-name"
+                        id="diseaseName">
+                    </h2>
+                    <p class="disease-name-kn hidden"
+                       id="diseaseNameKn">
+                    </p>
+                </div>
+                <div class="severity-badge"
+                     id="severityBadge">
+                </div>
+            </div>
+
+            <!-- Confidence Bar -->
+            <div class="confidence-section">
+                <div class="confidence-label">
+                    <span id="confidenceLabel">
+                        Confidence
+                    </span>
+                    <span class="confidence-value"
+                          id="confidenceValue">
+                    </span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill"
+                         id="confidenceFill">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low confidence warning -->
+            <div class="warning-box hidden"
+                 id="warningBox">
+                <span>⚠️</span>
+                <span id="warningText"></span>
+            </div>
+
+        </div>
+
+        <!-- Symptoms Card -->
+        <div class="result-card">
+            <h3 class="card-title">
+                <span>🔍</span>
+                <span id="symptomsTitle">Symptoms</span>
+            </h3>
+            <p class="card-content"
+               id="symptomsContent"></p>
+        </div>
+
+        <!-- Treatment Card -->
+        <div class="result-card treatment-card">
+            <h3 class="card-title">
+                <span>💊</span>
+                <span id="treatmentTitle">
+                    Treatment
+                </span>
+            </h3>
+            <p class="card-content"
+               id="treatmentContent"></p>
+        </div>
+
+        <!-- Prevention Card -->
+        <div class="result-card">
+            <h3 class="card-title">
+                <span>🛡️</span>
+                <span id="preventionTitle">
+                    Prevention
+                </span>
+            </h3>
+            <p class="card-content"
+               id="preventionContent"></p>
+        </div>
+
+        <!-- All Probabilities -->
+        <div class="result-card">
+            <h3 class="card-title">
+                <span>📊</span>
+                <span id="probsTitle">
+                    All Probabilities
+                </span>
+            </h3>
+            <div id="probsContainer"></div>
+        </div>
+
+        <!-- Scan Again Button -->
+        <button class="btn btn-analyse"
+                onclick="resetApp()">
+            <span id="scanAgainText">
+                🔄 Scan Another Leaf
+            </span>
+        </button>
+
+    </section>
+
+    <!-- ======= HISTORY SECTION ======= -->
+    <section class="history-section">
+        <div class="history-header">
+            <h3 id="historyTitle">
+                📋 Recent Predictions
+            </h3>
+            <button class="clear-btn"
+                    onclick="clearHistory()"
+                    id="clearBtn">
+                Clear
+            </button>
+        </div>
+        <div id="historyContainer">
+            <p class="no-history"
+               id="noHistoryText">
+                No predictions yet
+            </p>
+        </div>
+    </section>
+
+    <!-- ======= FOOTER ======= -->
+    <footer class="footer">
+        <p id="footerText">
+            AgroGuard — Built for farmers of
+            Mandya, Karnataka
+        </p>
+        <p class="footer-accuracy">
+            Model Accuracy: 93.62%
+        </p>
+    </footer>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
