@@ -78,7 +78,6 @@ function toggleLanguage() {
 function updateUILanguage() {
     const c = CONTENT[currentLanguage];
 
-    // Update all UI text
     setText("heroTitle",       c.heroTitle);
     setText("heroSubtitle",    c.heroSubtitle);
     setText("placeholderText", c.placeholderText);
@@ -99,12 +98,10 @@ function updateUILanguage() {
     setText("footerText",      c.footerText);
     setText("langToggle",      c.langToggle);
 
-    // Update result content if results visible
     if (window.lastResult) {
         displayResult(window.lastResult);
     }
 
-    // Update history
     loadHistory();
 }
 
@@ -123,7 +120,6 @@ function handleFileSelect(event) {
 
     selectedFile = file;
 
-    // Show preview
     const reader = new FileReader();
     reader.onload = function(e) {
         const preview = document.getElementById(
@@ -138,11 +134,8 @@ function handleFileSelect(event) {
     };
     reader.readAsDataURL(file);
 
-    // Show analyse button
     document.getElementById("analyseBtn")
         .classList.remove("hidden");
-
-    // Hide previous results
     document.getElementById("resultsSection")
         .classList.add("hidden");
 }
@@ -154,7 +147,6 @@ function handleFileSelect(event) {
 async function analyseImage() {
     if (!selectedFile) return;
 
-    // Show loading
     document.getElementById("loadingSection")
         .classList.remove("hidden");
     document.getElementById("resultsSection")
@@ -163,11 +155,9 @@ async function analyseImage() {
         .classList.add("hidden");
 
     try {
-        // Prepare form data
         const formData = new FormData();
         formData.append("file", selectedFile);
 
-        // Call API
         const response = await fetch(
             `${API_URL}/predict`,
             {
@@ -184,10 +174,12 @@ async function analyseImage() {
 
         const result = await response.json();
 
-        // Store result globally for language switch
+        // Save to THIS device's session only
+        // Each farmer sees only their own history
+        saveToSessionHistory(result);
+
         window.lastResult = result;
 
-        // Hide loading, show results
         document.getElementById("loadingSection")
             .classList.add("hidden");
 
@@ -202,9 +194,55 @@ async function analyseImage() {
 
         alert(
             "Error connecting to server.\n" +
-            "Please make sure the backend is running."
+            "Please make sure you have internet " +
+            "connection and try again."
         );
         console.error("Prediction error:", error);
+    }
+}
+
+// ============================================
+// SESSION HISTORY
+// Each device stores its own history locally
+// No farmer sees another farmer's history
+// ============================================
+
+function saveToSessionHistory(result) {
+    const history = getSessionHistory();
+
+    history.unshift({
+        predicted_class : result.predicted_class,
+        display_name    : result.display_name,
+        confidence      : result.confidence,
+        timestamp       : new Date().toLocaleString(
+            'en-IN',
+            {
+                day    : '2-digit',
+                month  : '2-digit',
+                year   : 'numeric',
+                hour   : '2-digit',
+                minute : '2-digit'
+            }
+        )
+    });
+
+    // Keep only last 20 predictions per device
+    const trimmed = history.slice(0, 20);
+
+    localStorage.setItem(
+        "agroguard_history",
+        JSON.stringify(trimmed)
+    );
+}
+
+function getSessionHistory() {
+    try {
+        return JSON.parse(
+            localStorage.getItem("agroguard_history")
+            || "[]"
+        );
+    } catch {
+        return [];
     }
 }
 
@@ -215,19 +253,16 @@ async function analyseImage() {
 function displayResult(result) {
     const isKn = currentLanguage === "kn";
 
-    // Disease name
     document.getElementById("diseaseName")
         .textContent = isKn
             ? result.disease_name_kn
             : result.disease_name_en;
 
-    // Disease icon
     document.getElementById("diseaseIcon")
         .textContent = DISEASE_ICONS[
             result.predicted_class
         ] || "🌿";
 
-    // Severity badge
     const badge = document.getElementById(
         "severityBadge"
     );
@@ -235,13 +270,11 @@ function displayResult(result) {
     badge.className = "severity-badge " +
         getSeverityClass(result.severity);
 
-    // Confidence
     document.getElementById("confidenceValue")
         .textContent = result.confidence.toFixed(1) + "%";
     document.getElementById("confidenceFill")
         .style.width = result.confidence + "%";
 
-    // Warning
     const warningBox = document.getElementById(
         "warningBox"
     );
@@ -253,25 +286,21 @@ function displayResult(result) {
         warningBox.classList.add("hidden");
     }
 
-    // Symptoms
     document.getElementById("symptomsContent")
         .textContent = isKn
             ? result.symptoms_kn
             : result.symptoms_en;
 
-    // Treatment
     document.getElementById("treatmentContent")
         .textContent = isKn
             ? result.treatment_kn
             : result.treatment_en;
 
-    // Prevention
     document.getElementById("preventionContent")
         .textContent = isKn
             ? result.prevention_kn
             : result.prevention_en;
 
-    // All probabilities
     const probsContainer = document.getElementById(
         "probsContainer"
     );
@@ -290,7 +319,8 @@ function displayResult(result) {
                     <span>${prob.toFixed(1)}%</span>
                 </div>
                 <div class="prob-bar">
-                    <div class="prob-fill ${isTop ? 'top' : ''}"
+                    <div class="prob-fill
+                        ${isTop ? 'top' : ''}"
                          style="width:${prob}%">
                     </div>
                 </div>
@@ -298,11 +328,9 @@ function displayResult(result) {
         `;
     });
 
-    // Show results
     document.getElementById("resultsSection")
         .classList.remove("hidden");
 
-    // Scroll to results
     document.getElementById("resultsSection")
         .scrollIntoView({ behavior: "smooth" });
 }
@@ -318,64 +346,49 @@ function getSeverityClass(severity) {
 }
 
 // ============================================
-// HISTORY
+// HISTORY — Device local only
 // ============================================
 
-async function loadHistory() {
-    try {
-        const response = await fetch(
-            `${API_URL}/history`
-        );
-        const data = await response.json();
+function loadHistory() {
+    const container = document.getElementById(
+        "historyContainer"
+    );
+    const isKn = currentLanguage === "kn";
+    const history = getSessionHistory();
 
-        const container = document.getElementById(
-            "historyContainer"
-        );
-        const isKn = currentLanguage === "kn";
+    if (history.length === 0) {
+        container.innerHTML = `
+            <p class="no-history" id="noHistoryText">
+                ${CONTENT[currentLanguage].noHistoryText}
+            </p>
+        `;
+        return;
+    }
 
-        if (data.predictions.length === 0) {
-            container.innerHTML = `
-                <p class="no-history"
-                   id="noHistoryText">
-                    ${CONTENT[currentLanguage].noHistoryText}
-                </p>
-            `;
-            return;
-        }
-
-        container.innerHTML = data.predictions
-            .slice(0, 5)
-            .map(p => `
-                <div class="history-item">
-                    <div>
-                        <div class="history-disease">
-                            ${DISEASE_ICONS[p.predicted_class] || "🌿"}
-                            ${p.display_name}
-                        </div>
-                        <div class="history-time">
-                            ${p.timestamp}
-                        </div>
+    container.innerHTML = history
+        .slice(0, 5)
+        .map(p => `
+            <div class="history-item">
+                <div>
+                    <div class="history-disease">
+                        ${DISEASE_ICONS[p.predicted_class]
+                          || "🌿"}
+                        ${p.display_name}
                     </div>
-                    <div class="history-confidence">
-                        ${p.confidence.toFixed(1)}%
+                    <div class="history-time">
+                        ${p.timestamp}
                     </div>
                 </div>
-            `).join("");
-
-    } catch (error) {
-        console.log("History load failed:", error);
-    }
+                <div class="history-confidence">
+                    ${p.confidence.toFixed(1)}%
+                </div>
+            </div>
+        `).join("");
 }
 
-async function clearHistory() {
-    try {
-        await fetch(`${API_URL}/history`, {
-            method: "DELETE"
-        });
-        loadHistory();
-    } catch (error) {
-        console.log("Clear history failed:", error);
-    }
+function clearHistory() {
+    localStorage.removeItem("agroguard_history");
+    loadHistory();
 }
 
 // ============================================
@@ -383,26 +396,22 @@ async function clearHistory() {
 // ============================================
 
 function resetApp() {
-    selectedFile    = null;
+    selectedFile      = null;
     window.lastResult = null;
 
-    // Reset preview
     document.getElementById("previewImage")
         .classList.add("hidden");
     document.getElementById("previewPlaceholder")
         .classList.remove("hidden");
 
-    // Reset file inputs
-    document.getElementById("fileInput").value = "";
+    document.getElementById("fileInput").value   = "";
     document.getElementById("cameraInput").value = "";
 
-    // Hide sections
     document.getElementById("analyseBtn")
         .classList.add("hidden");
     document.getElementById("resultsSection")
         .classList.add("hidden");
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
