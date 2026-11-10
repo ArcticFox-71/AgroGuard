@@ -422,4 +422,16 @@ function resetApp() {
 document.addEventListener("DOMContentLoaded", () => {
     loadHistory();
     updateUILanguage();
+    // Keep Render server awake
+// Pings backend every 10 minutes
+function keepServerAwake() {
+    fetch(`${API_URL}/health`)
+        .then(() => console.log("Server awake"))
+        .catch(() => console.log("Server sleeping"));
+}
+
+// Ping immediately on page load
+// then every 10 minutes
+keepServerAwake();
+setInterval(keepServerAwake, 10 * 60 * 1000);
 });
